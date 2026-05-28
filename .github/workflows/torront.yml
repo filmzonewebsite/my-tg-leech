@@ -30,7 +30,7 @@ jobs:
 
     - name: Install Python Dependencies
       run: |
-        pip install pyrogram tgcrypto aria2p requests
+        pip install python-telegram-bot aria2p requests
 
     - name: Start Aria2 Daemon and Process Input
       run: |
