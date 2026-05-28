@@ -6,9 +6,9 @@ import aria2p
 from pyrogram import Client
 
 # GitHub Secrets වලින් දත්ත ලබා ගැනීම
-API_ID = int(os.environ.get("24071415"))
-API_HASH = os.environ.get("4b584c0d66245e9a467d5e7aa0535cfd")
-BOT_TOKEN = os.environ.get("8723336349:AAGQo9f-7UeRECnee2FwtDo1RzV_zjZnZZY")
+API_ID = 24071415
+API_HASH = "4b584c0d66245e9a467d5e7aa0535cfd"
+BOT_TOKEN = "8723336349:AAGQo9f-7UeRECnee2FwtDo1RzV_zjZnZZY"
 
 # Telegram එකෙන් එවපු Torrent File එකේ Path එක (GitHub Action එකෙන් මේකට දත්ත එවයි)
 TORRENT_FILE_PATH = "download.torrent"
