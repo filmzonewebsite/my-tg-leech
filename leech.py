@@ -15,10 +15,6 @@ BOT_TOKEN = "8723336349:AAGQo9f-7UeRECnee2FwtDo1RzV_zjZnZZY"
 TORRENT_FILE_PATH = "download.torrent"
 CHAT_ID = os.environ.get("CHAT_ID")
 
-if not os.path.exists(TORRENT_FILE_PATH):
-    print("❌ Torrent file not found!")
-    sys.exit(1)
-
 app = Client("github_leech", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
 aria2 = aria2p.API(aria2p.Client(host="http://localhost", port=6800, secret=""))
 
