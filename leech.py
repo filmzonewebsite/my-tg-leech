@@ -10,11 +10,11 @@ from pyrogram import Client, filters
 from pyrogram.types import Message
 
 # ==================== CONFIGS ====================
-API_ID = 24071415
+API_ID = 8723336349
 API_HASH = "4b584c0d66245e9a467d5e7aa0535cfd"
 BOT_TOKEN = "8723336349:AAGQo9f-7UeRECnee2FwtDo1RzV_zjZnZZY"
 GH_TOKEN = "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"
-GH_REPO = "filmzonewebsite/my-tg-leech" # උදා: sadesha/my-tg-leech
+GH_REPO = "filmzonewebsite/my-tg-leech"
 # =================================================
 
 TORRENT_FILE_PATH = "download.torrent"
@@ -24,9 +24,11 @@ RUNNING_IN_GITHUB = os.environ.get("GITHUB_ACTIONS") == "true"
 app = Client("github_leech", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
 
 def get_progress_bar(percentage):
-    return "█" * int(percentage / 10) + "░" * (10 - int(percentage / 10))
+    pct = min(max(percentage, 0), 100)
+    completed_blocks = int(pct / 10)
+    return "█" * completed_blocks + "░" * (10 - completed_blocks)
 
-# GitHub Workflow එක ටෙලිග්‍රෑම් එකෙන් active කරන Function එක
+# GitHub Workflow එක ටෙලිග්‍රෑම් එකෙන් Trigger කරන Function එක
 def trigger_github_action(chat_id, torrent_data):
     url = f"https://api.github.com/repos/{GH_REPO}/actions/workflows/torrent.yml/dispatches"
     headers = {
@@ -57,7 +59,7 @@ async def upload_progress(current, total, reply_msg, start_time):
     try: await reply_msg.edit(f"⬆️ **Uploading to Telegram...**\n\n📊 **Progress:** [{bar}] {pct:.1f}%\n⚡ **Speed:** {speed_str}")
     except: pass
 
-# --- ටෙලිග්‍රෑම් එකෙන් මැසේජ් බාරගන්නා කොටස ---
+# --- ටෙලිග්‍රෑම් එකෙන් මැසේජ් බාරගන්නා කොටස (Termux එකේ Run වෙද්දී) ---
 @app.on_message(filters.command("start") & filters.private)
 async def start_cmd(c, m):
     await m.reply_text("👋 මට Torrent Magnet ලින්ක් එකක් එවන්න, නැත්නම් .torrent ෆයිල් එකක් අප්ලෝඩ් කරන්න!")
@@ -69,22 +71,21 @@ async def handle_text(c, m):
         if trigger_github_action(m.chat.id, m.text):
             await reply.edit("🚀 GitHub Server එක සාර්ථකව පණගැන්වුණා! ටික වෙලාවකින් ඩවුන්ලෝඩ් එක පටන් ගනීවි.")
         else:
-            await reply.edit("❌ GitHub Server එක පණගන්වන්න බැරි වුණා. Configs පරීක්ෂා කරන්න.")
+            await reply.edit("❌ GitHub Server එක පණගන්වන්න බැරි වුණා. Tokens පරීක්ෂා කරන්න.")
 
 @app.on_message(filters.document & filters.private)
 async def handle_doc(c, m):
     if m.document.file_name.endswith(".torrent"):
         reply = await m.reply_text("📦 Torrent ෆයිල් එක හඳුනාගත්තා! GitHub සර්වර් එක ලෑස්ති කරමින්...")
-        # පහසුව සඳහා ටොරන්ට් ෆයිල් එකේ දත්ත කෙලින්ම text එකක් විදිහට පාස් කරමු
         file_bytes = await m.download(in_memory=True)
-        torrent_content = file_bytes.getvalue().hex() # hex එකක් විදිහට යවමු
+        torrent_content = file_bytes.getvalue().hex()
         
         if trigger_github_action(m.chat.id, f"hex:{torrent_content}"):
             await reply.edit("🚀 GitHub Server එක පණගැන්වුණා! ටොරන්ට් ෆයිල් එක බාන්න සූදානම් කරමින් පවතී...")
         else:
             await reply.edit("❌ Server එක පණගැන්වීම අසාර්ථකයි.")
 
-# --- GitHub එක ඇතුළේ ඩවුන්ලෝඩ් එක සිද්ධ වෙන කොටස ---
+# --- GitHub Server එක ඇතුළේ ඩවුන්ලෝඩ් එක සිද්ධ වෙන කොටස ---
 async def run_github_download():
     aria2 = aria2p.API(aria2p.Client(host="http://localhost", port=6800, secret=""))
     async with app:
@@ -92,7 +93,13 @@ async def run_github_download():
         status_msg = await app.send_message(chat_id, "⚡ **GitHub Server Active! Starting Torrent Leech...**")
         
         try:
-            download = aria2.get_all_downloads()[0]
+            # Aria2 එකේ පවතින Download එක ලබා ගැනීම
+            await asyncio.sleep(2)
+            downloads = aria2.get_downloads()
+            if not downloads:
+                await status_msg.edit("❌ Torrent එක ඇතුළත් කිරීමට නොහැකි වුණා!")
+                return
+            download = downloads[0]
             gid = download.gid
             
             while True:
@@ -130,6 +137,5 @@ if __name__ == "__main__":
     if RUNNING_IN_GITHUB:
         asyncio.run(run_github_download())
     else:
-        print("🤖 Bot is listening to Telegram Messages locally/externally...")
+        print("🤖 Bot is listening to Telegram Messages...")
         app.run()
-        
