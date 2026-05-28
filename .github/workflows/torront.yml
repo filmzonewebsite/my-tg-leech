@@ -37,16 +37,18 @@ jobs:
         aria2c --enable-rpc --rpc-listen-all=true --rpc-allow-origin-all=true --max-concurrent-downloads=1 --file-allocation=none --daemon
         
         python -c "
-        import os, aria2p, bytesio
+        import os, aria2p
         aria2 = aria2p.API(aria2p.Client(host='http://localhost', port=6800, secret=''))
         inp = os.environ.get('TORRENT_INPUT')
         if inp.startswith('magnet:') or inp.startswith('http'):
             aria2.add_magnet(inp)
+            print('✅ Magnet/URL Added!')
         elif inp.startswith('hex:'):
             content = bytes.fromhex(inp[4:])
             with open('download.torrent', 'wb') as f:
                 f.write(content)
             aria2.add_torrent('download.torrent')
+            print('✅ .torrent File Added via Hex!')
         "
       env:
         TORRENT_INPUT: ${{ github.event.inputs.torrent_url }}
