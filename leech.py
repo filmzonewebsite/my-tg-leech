@@ -13,8 +13,8 @@ from pyrogram.types import Message
 API_ID = 24071415
 API_HASH = "4b584c0d66245e9a467d5e7aa0535cfd"
 BOT_TOKEN = "8723336349:AAGQo9f-7UeRECnee2FwtDo1RzV_zjZnZZY"
-GH_TOKEN = "ඔයා_පියවර_1දී_ගත්තු_ghp_ලින්ක්_එක"
-GH_REPO = "ඔයාගේ_github_username_එක/repository_නම" # උදා: sadesha/my-tg-leech
+GH_TOKEN = "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"
+GH_REPO = "filmzonewebsite/my-tg-leech" # උදා: sadesha/my-tg-leech
 # =================================================
 
 TORRENT_FILE_PATH = "download.torrent"
