@@ -7,7 +7,7 @@ on:
         description: 'Your Telegram Chat ID'
         required: true
       torrent_url:
-        description: 'Direct URL to .torrent file'
+        description: 'Direct .torrent Link OR Magnet Link'
         required: true
 
 jobs:
@@ -32,10 +32,6 @@ jobs:
       run: |
         pip install pyrogram tgcrypto aria2p
 
-    - name: Download .torrent file to Server
-      run: |
-        curl -L "${{ github.event.inputs.torrent_url }}" -o download.torrent
-
     - name: Start Aria2 Daemon
       run: |
         aria2c --enable-rpc --rpc-listen-all=true --rpc-allow-origin-all=true --max-concurrent-downloads=1 --file-allocation=none --daemon
@@ -46,5 +42,23 @@ jobs:
         API_HASH: ${{ secrets.API_HASH }}
         BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
         CHAT_ID: ${{ github.event.inputs.chat_id }}
+        TORRENT_INPUT: ${{ github.event.inputs.torrent_url }}
       run: |
+        # ලින්ක් එක Magnet එකක්ද නැද්ද කියා බලා ක්‍රියාත්මක වීම
+        python -c "
+        import os, aria2p, asyncio
+        aria2 = aria2p.API(aria2p.Client(host='http://localhost', port=6800, secret=''))
+        inp = os.environ.get('TORRENT_INPUT')
+        if inp.startswith('magnet:'):
+            aria2.add_magnet(inp)
+            print('✅ Magnet Link Added!')
+        else:
+            import requests
+            r = requests.get(inp, allow_redirects=True)
+            with open('download.torrent', 'wb') as f:
+                f.write(r.content)
+            aria2.add_torrent('download.torrent')
+            print('✅ .torrent File Added!')
+        "
         python leech.py
+        
