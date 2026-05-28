@@ -8,8 +8,8 @@ from pyrogram import Client
 
 # ==================== CONFIGS ====================
 API_ID = 24071415
-API_HASH = "ඔයාගේ_ඇත්තම_API_HASH_එක_මෙතනට_දාන්න"
-BOT_TOKEN = "ඔයාගේ_ඇත්තම_BOT_TOKEN_එක_මෙතනට_දාන්න"
+API_HASH = "4b584c0d66245e9a467d5e7aa0535cfd"
+BOT_TOKEN = "8723336349:AAGQo9f-7UeRECnee2FwtDo1RzV_zjZnZZY"
 # =================================================
 
 TORRENT_FILE_PATH = "download.torrent"
