@@ -1,0 +1,59 @@
+name: On-Demand Torrent Downloader
+
+on:
+  workflow_dispatch:
+    inputs:
+      chat_id:
+        description: 'Telegram Chat ID'
+        required: true
+      torrent_url:
+        description: 'Magnet or Torrent data'
+        required: true
+
+jobs:
+  leech:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+
+    - name: Install System Dependencies (Aria2)
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y aria2
+
+    - name: Install Python Dependencies
+      run: |
+        pip install pyrogram tgcrypto aria2p requests
+
+    - name: Start Aria2 Daemon and Process Input
+      run: |
+        aria2c --enable-rpc --rpc-listen-all=true --rpc-allow-origin-all=true --max-concurrent-downloads=1 --file-allocation=none --daemon
+        
+        python -c "
+        import os, aria2p, bytesio
+        aria2 = aria2p.API(aria2p.Client(host='http://localhost', port=6800, secret=''))
+        inp = os.environ.get('TORRENT_INPUT')
+        if inp.startswith('magnet:') or inp.startswith('http'):
+            aria2.add_magnet(inp)
+        elif inp.startswith('hex:'):
+            content = bytes.fromhex(inp[4:])
+            with open('download.torrent', 'wb') as f:
+                f.write(content)
+            aria2.add_torrent('download.torrent')
+        "
+      env:
+        TORRENT_INPUT: ${{ github.event.inputs.torrent_url }}
+
+    - name: Run Downloader Script
+      env:
+        CHAT_ID: ${{ github.event.inputs.chat_id }}
+        GITHUB_ACTIONS: "true"
+      run: |
+        python leech.py
