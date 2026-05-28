@@ -4,10 +4,10 @@ on:
   workflow_dispatch:
     inputs:
       chat_id:
-        description: 'Your Telegram Chat ID'
+        description: 'Telegram Chat ID'
         required: true
       torrent_url:
-        description: 'Direct .torrent Link OR Magnet Link'
+        description: 'Magnet or Torrent data'
         required: true
 
 jobs:
@@ -30,35 +30,30 @@ jobs:
 
     - name: Install Python Dependencies
       run: |
-        pip install pyrogram tgcrypto aria2p
+        pip install pyrogram tgcrypto aria2p requests
 
-    - name: Start Aria2 Daemon
+    - name: Start Aria2 Daemon and Process Input
       run: |
         aria2c --enable-rpc --rpc-listen-all=true --rpc-allow-origin-all=true --max-concurrent-downloads=1 --file-allocation=none --daemon
+        
+        python -c "
+        import os, aria2p, bytesio
+        aria2 = aria2p.API(aria2p.Client(host='http://localhost', port=6800, secret=''))
+        inp = os.environ.get('TORRENT_INPUT')
+        if inp.startswith('magnet:') or inp.startswith('http'):
+            aria2.add_magnet(inp)
+        elif inp.startswith('hex:'):
+            content = bytes.fromhex(inp[4:])
+            with open('download.torrent', 'wb') as f:
+                f.write(content)
+            aria2.add_torrent('download.torrent')
+        "
+      env:
+        TORRENT_INPUT: ${{ github.event.inputs.torrent_url }}
 
     - name: Run Downloader Script
       env:
-        API_ID: ${{ secrets.API_ID }}
-        API_HASH: ${{ secrets.API_HASH }}
-        BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
         CHAT_ID: ${{ github.event.inputs.chat_id }}
-        TORRENT_INPUT: ${{ github.event.inputs.torrent_url }}
+        GITHUB_ACTIONS: "true"
       run: |
-        # ලින්ක් එක Magnet එකක්ද නැද්ද කියා බලා ක්‍රියාත්මක වීම
-        python -c "
-        import os, aria2p, asyncio
-        aria2 = aria2p.API(aria2p.Client(host='http://localhost', port=6800, secret=''))
-        inp = os.environ.get('TORRENT_INPUT')
-        if inp.startswith('magnet:'):
-            aria2.add_magnet(inp)
-            print('✅ Magnet Link Added!')
-        else:
-            import requests
-            r = requests.get(inp, allow_redirects=True)
-            with open('download.torrent', 'wb') as f:
-                f.write(r.content)
-            aria2.add_torrent('download.torrent')
-            print('✅ .torrent File Added!')
-        "
         python leech.py
-        
